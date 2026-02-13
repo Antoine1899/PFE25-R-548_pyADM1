@@ -5,7 +5,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import integrate
 
-
 ## unit for each parameter is commented after it is declared (inline)
 ## if the suggested value for the parameter is different -
 ## The original default value from the original ADM1 report by Batstone et al (2002), is commented after each unit (inline)
@@ -393,7 +392,7 @@ def ADM1_ODE(t, state_zero):
   I_11 =  (I_pH_ac * I_IN_lim * I_nh3)
   I_12 =  (I_pH_h2 * I_IN_lim)
 
- 
+  
 
   # biochemical process rates from Rosen et al (2006) BSM2 report
   Rho_1 =  (k_dis * X_xc)   # Disintegration
@@ -483,7 +482,7 @@ def ADM1_ODE(t, state_zero):
   ## eq10 end##
 
 
- 
+  
   diff_S_IN = q_ad / V_liq * (S_IN_in - S_IN) + (N_xc - f_xI_xc * N_I - f_sI_xc * N_I-f_pr_xc * N_aa) * Rho_1 - Y_su * N_bac * Rho_5 + (N_aa - Y_aa * N_bac) * Rho_6 - Y_fa * N_bac * Rho_7 - Y_c4 * N_bac * Rho_8 - Y_c4 * N_bac * Rho_9 - Y_pro * N_bac * Rho_10 - Y_ac * N_bac * Rho_11 - Y_h2 * N_bac * Rho_12 + (N_bac - N_xc) * (Rho_13 + Rho_14 + Rho_15 + Rho_16 + Rho_17 + Rho_18 + Rho_19) # eq11 
 
 
@@ -581,7 +580,7 @@ def DAESolve():
     S_hco3_ion = K_a_co2 * S_IC / (K_a_co2 + S_H_ion)
     S_nh3 = K_a_IN * S_IN / (K_a_IN + S_H_ion)
     shdelta = S_cation + (S_IN - S_nh3) + S_H_ion - S_hco3_ion - S_ac_ion / 64.0 - S_pro_ion / 112.0 - S_bu_ion / 160.0 - S_va_ion / 208.0 - K_w / S_H_ion - S_anion
-    shgradeq = 1 + K_a_IN * S_IN / ((K_a_IN + S_H_ion) * (K_a_IN + S_H_ion)) + K_a_co2 * S_IC / ((K_a_co2 + S_H_ion) * (K_a_co2 + S_H_ion))               + 1 / 64.0 * K_a_ac * S_ac / ((K_a_ac + S_H_ion) * (K_a_ac + S_H_ion))               + 1 / 112.0 * K_a_pro * S_pro / ((K_a_pro + S_H_ion) * (K_a_pro + S_H_ion))               + 1 / 160.0 * K_a_bu * S_bu / ((K_a_bu + S_H_ion) * (K_a_bu + S_H_ion))               + 1 / 208.0 * K_a_va * S_va / ((K_a_va + S_H_ion) * (K_a_va + S_H_ion))               + K_w / (S_H_ion * S_H_ion)
+    shgradeq = 1 + K_a_IN * S_IN / ((K_a_IN + S_H_ion) * (K_a_IN + S_H_ion)) + K_a_co2 * S_IC / ((K_a_co2 + S_H_ion) * (K_a_co2 + S_H_ion))                + 1 / 64.0 * K_a_ac * S_ac / ((K_a_ac + S_H_ion) * (K_a_ac + S_H_ion))                + 1 / 112.0 * K_a_pro * S_pro / ((K_a_pro + S_H_ion) * (K_a_pro + S_H_ion))                + 1 / 160.0 * K_a_bu * S_bu / ((K_a_bu + S_H_ion) * (K_a_bu + S_H_ion))                + 1 / 208.0 * K_a_va * S_va / ((K_a_va + S_H_ion) * (K_a_va + S_H_ion))                + K_w / (S_H_ion * S_H_ion)
     S_H_ion = S_H_ion - shdelta / shgradeq
     if S_H_ion <= 0:
         S_H_ion = tol
@@ -681,8 +680,10 @@ for u in t[1:]:
   if q_ch4 < 0:
     q_ch4 = 0
 
+  # CORRECTION 1 : Remplacement de append par concat pour gasflow
   flowtemp = {'q_gas' : q_gas, 'q_ch4' : q_ch4}
-  gasflow = gasflow.append(flowtemp, ignore_index=True)
+  # OLD: gasflow = gasflow.append(flowtemp, ignore_index=True)
+  gasflow = pd.concat([gasflow, pd.DataFrame([flowtemp])], ignore_index=True)
 
   S_nh4_ion =  (S_IN - S_nh3)
   S_co2 =  (S_IC - S_hco3_ion)
@@ -692,8 +693,10 @@ for u in t[1:]:
   #state transfer
   state_zero = [S_su, S_aa, S_fa, S_va, S_bu, S_pro, S_ac, S_h2, S_ch4, S_IC, S_IN, S_I, X_xc, X_ch, X_pr, X_li, X_su, X_aa, X_fa, X_c4, X_pro, X_ac, X_h2, X_I, S_cation, S_anion, S_H_ion, S_va_ion, S_bu_ion, S_pro_ion, S_ac_ion, S_hco3_ion, S_co2, S_nh3, S_nh4_ion, S_gas_h2, S_gas_ch4, S_gas_co2]
   
+  # CORRECTION 2 : Remplacement de append par concat pour simulate_results
   dfstate_zero = pd.DataFrame([state_zero], columns = columns)
-  simulate_results = simulate_results.append(dfstate_zero)
+  # OLD: simulate_results = simulate_results.append(dfstate_zero)
+  simulate_results = pd.concat([simulate_results, dfstate_zero], ignore_index=True)
   t0 = u
       
 
@@ -702,35 +705,4 @@ phlogarray = -1 * np.log10(simulate_results['pH'])
 simulate_results['pH'] = phlogarray
 simulate_results.to_csv("dynamic_out.csv", index = False)
 
-## ring test begin
-# to compare the resutls with the dynamic simulation data from the BSM2 Matlab implementation
-# pyOut = pd.read_csv("dynamic_out.csv")
-# pyIn = pd.read_csv("digester_influent.csv")
-# MatlabOut = pd.read_csv("Matlabout_dyn.csv")
-
-# pyOut.time = pyIn.time
-# pyOut.Q = pyIn.Q
-# MatlabOut.Q = pyOut.Q
-# mvalue = pvalue = 0
-# ringtest = pd.DataFrame(columns=["state", "Matlab", "Python", "error"])
-
-# n = 0
-# for i in pyOut.columns:
-#   Matlabinteg = integrate.trapz(MatlabOut[i] , MatlabOut.time)
-#   pyinteg = integrate.trapz(pyOut[i] , pyOut.time)
-#   results =pd.DataFrame([[MatlabOut[i].name, Matlabinteg/280, pyinteg/280, abs(pyinteg-Matlabinteg)/280]], columns=["state", "Matlab", "Python", "error"])
-#   ringtest = ringtest.append(results)
-#   print("Matlab " + MatlabOut[i].name + " average = " + str(Matlabinteg/280) + " Python " +  pyOut[i].name + " average = " + str(pyinteg/280) + " Error =" + str(abs(pyinteg-Matlabinteg)/280))
-  
-# ringtest.to_csv("ringtest.csv", index = False)
-
-
-# for i in pyOut.columns:
-#   plt.figure(figsize=(32, 8))
-#   plt.plot(MatlabOut.time, MatlabOut[i], label = MatlabOut[i].name, linestyle="-", color = "red")
-#   plt.plot(pyOut.time, pyOut[i], label = pyOut[i].name, linestyle="--", color = "blue")
-#   plt.legend()
-#   plt.show()
-
-## ring test end
 
