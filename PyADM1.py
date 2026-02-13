@@ -135,9 +135,11 @@ V_liq =  3400 #m^3
 V_gas =  300 #m^3
 V_ad = V_liq + V_gas #m^-3
 
-# reading influent and initial condition data from csv files
-influent_state = pd.read_csv("digester_influent.csv")
-initial_state = pd.read_csv("digester_initial.csv")
+# -------------------------------------------------------------
+# MODIFICATION TEST 1.3 : Ajout de sep=';' pour lecture CSV
+# -------------------------------------------------------------
+influent_state = pd.read_csv("digester_influent.csv", sep=';')
+initial_state = pd.read_csv("digester_initial.csv", sep=';')
 
 # Function to set influent values for influent state variables at each simulation step
 def setInfluent(i):
@@ -680,9 +682,8 @@ for u in t[1:]:
   if q_ch4 < 0:
     q_ch4 = 0
 
-  # CORRECTION 1 : Remplacement de append par concat pour gasflow
   flowtemp = {'q_gas' : q_gas, 'q_ch4' : q_ch4}
-  # OLD: gasflow = gasflow.append(flowtemp, ignore_index=True)
+  # --- FIX TEST 1.2 REAPPLIQUÉ ICI ---
   gasflow = pd.concat([gasflow, pd.DataFrame([flowtemp])], ignore_index=True)
 
   S_nh4_ion =  (S_IN - S_nh3)
@@ -693,9 +694,8 @@ for u in t[1:]:
   #state transfer
   state_zero = [S_su, S_aa, S_fa, S_va, S_bu, S_pro, S_ac, S_h2, S_ch4, S_IC, S_IN, S_I, X_xc, X_ch, X_pr, X_li, X_su, X_aa, X_fa, X_c4, X_pro, X_ac, X_h2, X_I, S_cation, S_anion, S_H_ion, S_va_ion, S_bu_ion, S_pro_ion, S_ac_ion, S_hco3_ion, S_co2, S_nh3, S_nh4_ion, S_gas_h2, S_gas_ch4, S_gas_co2]
   
-  # CORRECTION 2 : Remplacement de append par concat pour simulate_results
   dfstate_zero = pd.DataFrame([state_zero], columns = columns)
-  # OLD: simulate_results = simulate_results.append(dfstate_zero)
+  # --- FIX TEST 1.2 REAPPLIQUÉ ICI ---
   simulate_results = pd.concat([simulate_results, dfstate_zero], ignore_index=True)
   t0 = u
       
@@ -704,5 +704,3 @@ for u in t[1:]:
 phlogarray = -1 * np.log10(simulate_results['pH'])
 simulate_results['pH'] = phlogarray
 simulate_results.to_csv("dynamic_out.csv", index = False)
-
-
