@@ -132,14 +132,14 @@ K_H_ch4 =  0.0014 * np.exp((-14240 / (100 * R)) * (1 / T_base - 1 / T_ad)) #Mliq
 K_H_h2 =  7.8 * 10 ** -4 * np.exp(-4180 / (100 * R) * (1 / T_base - 1 / T_ad)) #Mliq.bar^-1 #7.38*10^-4
 
 # Physical parameter values used in BSM2 from the Rosen et al (2006) BSM2 report
-V_liq =  3400 #m^3
-V_gas =  300 #m^3
+V_liq =  29.15 #m^3
+V_gas =  2.915 #m^3
 V_ad = V_liq + V_gas #m^-3
 
 # -------------------------------------------------------------
 # LECTURE FICHIERS (FIX TEST 1.3 : sep=';')
 # -------------------------------------------------------------
-influent_state = pd.read_csv("digester_influent.csv", sep=';')
+influent_state = pd.read_csv("digester_influent_témoin.csv", sep=';')
 initial_state = pd.read_csv("digester_initial.csv", sep=';')
 
 # Function to set influent values for influent state variables at each simulation step
@@ -665,8 +665,7 @@ simulate_results['V_ch4_cumul'] = ((simulate_results['q_ch4'] * dt)/196.1).cumsu
 # -------------------------------------
 
 # Sauvegarde du fichier CSV complet (AVEC POINT VIRGULE)
-simulate_results.to_csv("dynamic_out.csv", index = False, sep=';')
-print("Fichier généré avec la colonne V_ch4_cumul.")
+simulate_results.to_csv("dynamic_out_témoin.csv", index = False, sep=';')
 
 
 # ==============================================================================
@@ -680,7 +679,7 @@ try:
 
     # 2. Récupération des données DEPUIS LE CSV (Lecture propre avec ';')
     # ATTENTION : On lit "dynamic_out.csv" car c'est le nom de sauvegarde actuel
-    pyOut = pd.read_csv("dynamic_out.csv", sep=';')
+    pyOut = pd.read_csv("dynamic_out_témoin.csv", sep=';')
     
     # On lit simplement les colonnes qu'on vient de calculer
     q_ch4_instant = pyOut['q_ch4'].values[mask_50]
