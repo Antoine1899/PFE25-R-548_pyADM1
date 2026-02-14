@@ -61,7 +61,6 @@ Y_h2 =  0.06
 
 
 # Biochemical parameter values from the Rosen et al (2006) BSM2 report
-# NOTE: Ces valeurs sont celles du code original (pas encore calibrées pour le Test 1.4)
 k_dis =  0.5 #d^-1
 k_hyd_ch =  10 #d^-1
 k_hyd_pr =  10 #d^-1
@@ -132,8 +131,8 @@ K_H_ch4 =  0.0014 * np.exp((-14240 / (100 * R)) * (1 / T_base - 1 / T_ad)) #Mliq
 K_H_h2 =  7.8 * 10 ** -4 * np.exp(-4180 / (100 * R) * (1 / T_base - 1 / T_ad)) #Mliq.bar^-1 #7.38*10^-4
 
 # Physical parameter values used in BSM2 from the Rosen et al (2006) BSM2 report
-V_liq =  3400 #m^3
-V_gas =  300 #m^3
+V_liq =  29.15 #m^3
+V_gas =  2.915 #m^3
 V_ad = V_liq + V_gas #m^-3
 
 # -------------------------------------------------------------
@@ -592,16 +591,17 @@ feedflow = pd.DataFrame(initq)
 ## Dynamic simulation
 # Loop for simlating at each time step and feeding the results to the next time step
 for u in t[1:]:
-  n+=1
   setInfluent(n)
   
-  # --- DEBUG AJOUTÉ : AFFICHAGE CONSOLE ---
-  print(f"DEBUG [t={t0:.2f}]: Q={q_ad:.2f}")
-  # ----------------------------------------
-
-  # --- FIX TEST 1.2 REAPPLIQUÉ ICI (OMIS DANS L'ÉTAPE PRÉCÉDENTE COMME DEMANDÉ) ---
+  # --- MODIFICATION: REFRESH CRITIQUE DU STATE_INPUT ---
   state_input = [S_su_in,S_aa_in,S_fa_in,S_va_in,S_bu_in,S_pro_in,S_ac_in,S_h2_in,S_ch4_in,S_IC_in,S_IN_in,S_I_in,X_xc_in,X_ch_in,X_pr_in,X_li_in,X_su_in,X_aa_in,X_fa_in,X_c4_in,X_pro_in,X_ac_in,X_h2_in,X_I_in,S_cation_in,S_anion_in]
   
+  # --- BLOC VERIFICATION ---
+  if n == 0:
+      print("\n--- VERIFICATION LIGNE 0 (t=0) ---")
+      print(f"Q (q_ad) lu : {q_ad}")
+      print("----------------------------------\n")
+
   # Span for next time step
   tstep = [t0,u]
 
@@ -643,6 +643,9 @@ for u in t[1:]:
   # --- FIX TEST 1.2 REAPPLIQUÉ ICI ---
   simulate_results = pd.concat([simulate_results, dfstate_zero], ignore_index=True)
   t0 = u
+  
+  # --- MODIFICATION: ON DECALE LE COMPTEUR A LA FIN ---
+  n+=1
       
 
 # ==============================================================================
