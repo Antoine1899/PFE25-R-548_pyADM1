@@ -61,6 +61,7 @@ Y_h2 =  0.06
 
 
 # Biochemical parameter values from the Rosen et al (2006) BSM2 report
+# NOTE: Ces valeurs sont celles du code original (pas encore calibrées pour le Test 1.4)
 k_dis =  0.5 #d^-1
 k_hyd_ch =  10 #d^-1
 k_hyd_pr =  10 #d^-1
@@ -136,7 +137,7 @@ V_gas =  300 #m^3
 V_ad = V_liq + V_gas #m^-3
 
 # -------------------------------------------------------------
-# MODIFICATION TEST 1.3 : Ajout de sep=';' pour lecture CSV
+# LECTURE FICHIERS (FIX TEST 1.3 : sep=';')
 # -------------------------------------------------------------
 influent_state = pd.read_csv("digester_influent.csv", sep=';')
 initial_state = pd.read_csv("digester_initial.csv", sep=';')
@@ -235,71 +236,9 @@ setInfluent(0) #setting the influent for the initial time (t0) to be ready for t
 q_ad =  178.4674 #m^3.d^-1 initial flow rate (can be modified during the simulation by the control algorithm)
 
 
-state_zero = [S_su,
-              S_aa,
-              S_fa,
-              S_va,
-              S_bu,
-              S_pro,
-              S_ac,
-              S_h2,
-              S_ch4,
-              S_IC,
-              S_IN,
-              S_I,
-              X_xc,
-              X_ch,
-              X_pr,
-              X_li,
-              X_su,
-              X_aa,
-              X_fa,
-              X_c4,
-              X_pro,
-              X_ac,
-              X_h2,
-              X_I,
-              S_cation,
-              S_anion,
-              S_H_ion,
-              S_va_ion,
-              S_bu_ion,
-              S_pro_ion,
-              S_ac_ion,
-              S_hco3_ion,
-              S_co2,
-              S_nh3,
-              S_nh4_ion,
-              S_gas_h2,
-              S_gas_ch4,
-              S_gas_co2]
+state_zero = [S_su, S_aa, S_fa, S_va, S_bu, S_pro, S_ac, S_h2, S_ch4, S_IC, S_IN, S_I, X_xc, X_ch, X_pr, X_li, X_su, X_aa, X_fa, X_c4, X_pro, X_ac, X_h2, X_I, S_cation, S_anion, S_H_ion, S_va_ion, S_bu_ion, S_pro_ion, S_ac_ion, S_hco3_ion, S_co2, S_nh3, S_nh4_ion, S_gas_h2, S_gas_ch4, S_gas_co2]
 
-state_input = [S_su_in,
-              S_aa_in,
-              S_fa_in,
-              S_va_in,
-              S_bu_in,
-              S_pro_in,
-              S_ac_in,
-              S_h2_in,
-              S_ch4_in,
-              S_IC_in,
-              S_IN_in,
-              S_I_in,
-              X_xc_in,
-              X_ch_in,
-              X_pr_in,
-              X_li_in,
-              X_su_in,
-              X_aa_in,
-              X_fa_in,
-              X_c4_in,
-              X_pro_in,
-              X_ac_in,
-              X_h2_in,
-              X_I_in,
-              S_cation_in,
-              S_anion_in]
+state_input = [S_su_in, S_aa_in, S_fa_in, S_va_in, S_bu_in, S_pro_in, S_ac_in, S_h2_in, S_ch4_in, S_IC_in, S_IN_in, S_I_in, X_xc_in, X_ch_in, X_pr_in, X_li_in, X_su_in, X_aa_in, X_fa_in, X_c4_in, X_pro_in, X_ac_in, X_h2_in, X_I_in, S_cation_in, S_anion_in]
 
 
 # Function for calulating the derivatives related to ADM1 system of equations from the Rosen et al (2006) BSM2 report
@@ -626,7 +565,7 @@ def DAESolve():
     j+=1
 
 ## time array definition
-t = influent_state['time']
+t = influent_state.iloc[:, 0]
 
 
 # Initiate the cache data frame for storing simulation results
@@ -700,7 +639,136 @@ for u in t[1:]:
   t0 = u
       
 
-# Write the dynamic simulation resutls to csv
+# ==============================================================================
+# 5. POST-TRAITEMENT & SAUVEGARDE (AJOUT TEST 1.4)
+# ==============================================================================
+
+# Calcul du pH
 phlogarray = -1 * np.log10(simulate_results['pH'])
 simulate_results['pH'] = phlogarray
-simulate_results.to_csv("dynamic_out.csv", index = False)
+
+# Ajout du débit instantané q_ch4 (m3/j) - CORRECTION DE LONGUEUR
+# gasflow peut être légèrement plus long d'une unité à cause de l'initialisation, on coupe à la longueur des résultats
+simulate_results['q_ch4'] = gasflow['q_ch4'].iloc[:len(simulate_results)].values
+
+# --- AJOUT CALCUL DU VOLUME CUMULÉ ---
+# 1. On récupère le pas de temps (dt) en jours
+t_vals = influent_state.iloc[:, 0].values
+if len(t_vals) > 1:
+    dt = t_vals[1] - t_vals[0] # Ex: 0.0104 jour (pour 15 min)
+else:
+    dt = 1/96 # Valeur de sécurité
+
+# 2. On calcule le volume cumulé : Somme(Débit * dt)
+# Cela crée une colonne 'V_ch4_cumul' qui contient le vrai volume en m3
+simulate_results['V_ch4_cumul'] = ((simulate_results['q_ch4'] * dt)/196.1).cumsum()
+# -------------------------------------
+
+# Sauvegarde du fichier CSV complet (AVEC POINT VIRGULE)
+simulate_results.to_csv("dynamic_out.csv", index = False, sep=';')
+print("Fichier généré avec la colonne V_ch4_cumul.")
+
+
+# ==============================================================================
+# 6. SECTION GRAPHIQUE (LECTURE DIRECTE DU FICHIER)
+# ==============================================================================
+try:
+    # 1. Filtre du temps (0 à 50 jours)
+    full_time = influent_state.iloc[:, 0].values
+    mask_50 = full_time <= 10 # On garde 10 jours comme dans le code témoin pour l'instant
+    time = full_time[mask_50]
+
+    # 2. Récupération des données DEPUIS LE CSV (Lecture propre avec ';')
+    # ATTENTION : On lit "dynamic_out.csv" car c'est le nom de sauvegarde actuel
+    pyOut = pd.read_csv("dynamic_out.csv", sep=';')
+    
+    # On lit simplement les colonnes qu'on vient de calculer
+    q_ch4_instant = pyOut['q_ch4'].values[mask_50]
+    q_ch4_cumule = pyOut['V_ch4_cumul'].values[mask_50]  # <--- ON LIT LE VRAI CUMUL ICI
+    ph_data = pyOut['pH'].values[mask_50]
+    
+    # --- CALCUL SOMME DES AGV ---
+    # Lecture des 4 acides
+    s_ac_val = pyOut['S_ac'].values[mask_50]
+    s_pro_val = pyOut['S_pro'].values[mask_50]
+    s_bu_val = pyOut['S_bu'].values[mask_50]
+    s_va_val = pyOut['S_va'].values[mask_50]
+    
+    # Somme totale (Pour graph 5)
+    vfa_total = s_ac_val + s_pro_val + s_bu_val + s_va_val
+
+    # Lecture Ammoniaque (Pour graph 6)
+    nh3_data = pyOut['S_nh3'].values[mask_50]
+    # -----------------------------------------------------
+    
+    # Pour la qualité du gaz, on a besoin du total (q_gas) qui est dans le dataframe gasflow
+    q_gas_total = gasflow['q_gas'].values[mask_50]
+    # Calcul sécurisé du pourcentage pour éviter la division par zéro
+    pourcentage_ch4 = np.divide(q_ch4_instant, q_gas_total, out=np.zeros_like(q_ch4_instant), where=q_gas_total!=0) * 100
+
+    # Création de la figure
+    plt.figure(figsize=(16, 18))
+
+    # --- Graphique 1 : Débit de Méthane ---
+    plt.subplot(3, 2, 1)
+    plt.plot(time, q_ch4_instant, color='green', lw=2)
+    plt.title('Débit journalier de Méthane ($q_{CH4}$)')
+    plt.xlabel('Temps (jours)')
+    plt.ylabel('m3 / jour')
+    plt.grid(True, alpha=0.3)
+
+    # --- Graphique 2 : Volume Cumulé (Lecture directe) ---
+    plt.subplot(3, 2, 2)
+    plt.fill_between(time, q_ch4_cumule, color='lightgreen', alpha=0.5)
+    plt.plot(time, q_ch4_cumule, color='darkgreen', lw=2)
+    plt.title('Production Cumulée de Méthane')
+    plt.xlabel('Temps (jours)')
+    plt.ylabel('Volume Total (m3 / kg VS)')
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+
+    # --- Graphique 3 : Qualité du Gaz (% CH4) ---
+    plt.subplot(3, 2, 3)
+    plt.plot(time, pourcentage_ch4, color='darkblue', lw=2)
+    plt.axhline(y=60, color='red', linestyle='--', alpha=0.5)
+    plt.title('Qualité du Biogaz (% CH4)')
+    plt.xlabel('Temps (jours)')
+    plt.ylabel('% de Méthane')
+    plt.ylim(0, 100)
+    plt.grid(True, alpha=0.3)
+
+    # --- Graphique 4 : Stabilité pH ---
+    plt.subplot(3, 2, 4)
+    plt.plot(time, ph_data, color='blue', lw=2)
+    plt.axhline(y=7.0, color='black', linestyle='--', alpha=0.3)
+    plt.title('Évolution du pH')
+    plt.xlabel('Temps (jours)')
+    plt.ylabel('pH')
+    plt.ylim(6, 8.5)
+    plt.grid(True, alpha=0.3)
+
+    # --- Graphique 5 : SOMME AGV (Remplace Acétate) ---
+    plt.subplot(3, 2, 5)
+    plt.plot(time, vfa_total, color='purple', lw=2)
+    plt.title('Concentration AGV')
+    plt.xlabel('Temps (jours)')
+    plt.ylabel('kg COD / m3')
+    plt.grid(True, alpha=0.3)
+
+    # --- Graphique 6 : Ammoniac (Remis en place) ---
+    plt.subplot(3, 2, 6)
+    plt.plot(time, nh3_data, color='brown', lw=2)
+    plt.title('Concentration en Ammoniac ($S_{nh3}$)')
+    plt.xlabel('Temps (jours)')
+    plt.ylabel('kmole N / m3')
+    plt.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
+
+    print(f"--- RÉSULTAT FINAL ---")
+    print(f"Volume CH4 total (lu dans CSV) : {q_ch4_cumule[-1]:.2f} m3/kg VS")
+    print(f"Qualité moyenne du gaz : {np.mean(pourcentage_ch4[pourcentage_ch4>0]):.1f} % CH4")
+
+except Exception as e:
+    print(f"Erreur lors de la génération des graphiques : {e}")
