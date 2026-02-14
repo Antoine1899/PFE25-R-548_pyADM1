@@ -132,19 +132,19 @@ K_H_ch4 =  0.0014 * np.exp((-14240 / (100 * R)) * (1 / T_base - 1 / T_ad)) #Mliq
 K_H_h2 =  7.8 * 10 ** -4 * np.exp(-4180 / (100 * R) * (1 / T_base - 1 / T_ad)) #Mliq.bar^-1 #7.38*10^-4
 
 # Physical parameter values used in BSM2 from the Rosen et al (2006) BSM2 report
-V_liq =  29.15 #m^3
-V_gas =  2.915 #m^3
+V_liq =  3400 #m^3
+V_gas =  300 #m^3
 V_ad = V_liq + V_gas #m^-3
 
 # -------------------------------------------------------------
-# LECTURE FICHIERS (FIX TEST 1.3 : sep=';')
+# LECTURE FICHIERS
 # -------------------------------------------------------------
 influent_state = pd.read_csv("digester_influent_témoin.csv", sep=';')
 initial_state = pd.read_csv("digester_initial.csv", sep=';')
 
 # Function to set influent values for influent state variables at each simulation step
 def setInfluent(i):
-    global S_su_in, S_aa_in, S_fa_in, S_va_in, S_bu_in, S_pro_in, S_ac_in, S_h2_in,S_ch4_in, S_IC_in, S_IN_in, S_I_in,X_xc_in, X_ch_in,X_pr_in,X_li_in,X_su_in,X_aa_in,X_fa_in,X_c4_in,X_pro_in,X_ac_in,X_h2_in,X_I_in,S_cation_in,S_anion_in
+    global S_su_in, S_aa_in, S_fa_in, S_va_in, S_bu_in, S_pro_in, S_ac_in, S_h2_in,S_ch4_in, S_IC_in, S_IN_in, S_I_in,X_xc_in, X_ch_in,X_pr_in,X_li_in,X_su_in,X_aa_in,X_fa_in,X_c4_in,X_pro_in,X_ac_in,X_h2_in,X_I_in,S_cation_in,S_anion_in,q_ad
     ##variable definition
     # Input values (influent/feed) 
     S_su_in = influent_state['S_su'][i] #kg COD.m^-3
@@ -175,6 +175,7 @@ def setInfluent(i):
     
     S_cation_in = influent_state['S_cation'][i] #kmole.m^-3
     S_anion_in = influent_state['S_anion'][i] #kmole.m^-3
+    q_ad = influent_state['Q'][i]
     
 
 # initiate variables (initial values for the reactor state at the initial time (t0)
@@ -243,7 +244,7 @@ state_input = [S_su_in, S_aa_in, S_fa_in, S_va_in, S_bu_in, S_pro_in, S_ac_in, S
 
 # Function for calulating the derivatives related to ADM1 system of equations from the Rosen et al (2006) BSM2 report
 def ADM1_ODE(t, state_zero):
-  global S_nh4_ion, S_co2, p_gas, q_gas, q_ch4
+  global S_nh4_ion, S_co2, p_gas, q_gas, q_ch4, state_input # Ajout de global state_input
   S_su = state_zero[0]
   S_aa = state_zero[1]
   S_fa = state_zero[2]
@@ -594,6 +595,11 @@ for u in t[1:]:
   n+=1
   setInfluent(n)
   
+  # --- DEBUG AJOUTÉ : AFFICHAGE CONSOLE ---
+  print(f"DEBUG [t={t0:.2f}]: Q={q_ad:.2f}")
+  # ----------------------------------------
+
+  # --- FIX TEST 1.2 REAPPLIQUÉ ICI (OMIS DANS L'ÉTAPE PRÉCÉDENTE COMME DEMANDÉ) ---
   state_input = [S_su_in,S_aa_in,S_fa_in,S_va_in,S_bu_in,S_pro_in,S_ac_in,S_h2_in,S_ch4_in,S_IC_in,S_IN_in,S_I_in,X_xc_in,X_ch_in,X_pr_in,X_li_in,X_su_in,X_aa_in,X_fa_in,X_c4_in,X_pro_in,X_ac_in,X_h2_in,X_I_in,S_cation_in,S_anion_in]
   
   # Span for next time step
@@ -666,6 +672,7 @@ simulate_results['V_ch4_cumul'] = ((simulate_results['q_ch4'] * dt)/196.1).cumsu
 
 # Sauvegarde du fichier CSV complet (AVEC POINT VIRGULE)
 simulate_results.to_csv("dynamic_out_témoin.csv", index = False, sep=';')
+print("Fichier généré avec la colonne V_ch4_cumul.")
 
 
 # ==============================================================================
