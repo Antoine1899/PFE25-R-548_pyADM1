@@ -131,8 +131,8 @@ K_H_ch4 =  0.0014 * np.exp((-14240 / (100 * R)) * (1 / T_base - 1 / T_ad)) #Mliq
 K_H_h2 =  7.8 * 10 ** -4 * np.exp(-4180 / (100 * R) * (1 / T_base - 1 / T_ad)) #Mliq.bar^-1 #7.38*10^-4
 
 # Physical parameter values used in BSM2 from the Rosen et al (2006) BSM2 report
-V_liq =  29.15 #m^3
-V_gas =  2.915 #m^3
+V_liq =  14.42 #m^3
+V_gas =  1.442 #m^3
 V_ad = V_liq + V_gas #m^-3
 
 # -------------------------------------------------------------
@@ -775,7 +775,7 @@ try:
     plt.show()
 
     print(f"--- RÉSULTAT FINAL ---")
-    print(f"Volume CH4 total (lu dans CSV) : {q_ch4_cumule[-1]:.2f} m3/kg VS")
+    print(f"Volume CH4 total : {q_ch4_cumule[-1]:.2f} m3/kg VS")
     print(f"Qualité moyenne du gaz : {np.mean(pourcentage_ch4[pourcentage_ch4>0]):.1f} % CH4")
 
 except Exception as e:
