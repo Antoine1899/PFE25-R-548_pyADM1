@@ -670,7 +670,7 @@ else:
 
 # 2. On calcule le volume cumulé : Somme(Débit * dt)
 # Cela crée une colonne 'V_ch4_cumul' qui contient le vrai volume en m3
-simulate_results['V_ch4_cumul'] = ((simulate_results['q_ch4'] * dt)/196.1).cumsum()
+simulate_results['V_ch4_cumul'] = ((simulate_results['q_ch4'] * dt)/93.5).cumsum()
 # -------------------------------------
 
 # Sauvegarde du fichier CSV complet
@@ -725,7 +725,7 @@ try:
     plt.ylabel('m3 / jour')
     plt.grid(True, alpha=0.3)
 
-    # --- Graphique 2 : Volume Cumulé (Lecture directe) ---
+    # --- Graphique 2 : Volume Cumulé ---
     plt.subplot(3, 2, 2)
     plt.fill_between(time, q_ch4_cumule, color='lightgreen', alpha=0.5)
     plt.plot(time, q_ch4_cumule, color='darkgreen', lw=2)
@@ -755,7 +755,7 @@ try:
     plt.ylim(6, 8.5)
     plt.grid(True, alpha=0.3)
 
-    # --- Graphique 5 : SOMME AGV (Remplace Acétate) ---
+    # --- Graphique 5 : SOMME AGV ---
     plt.subplot(3, 2, 5)
     plt.plot(time, vfa_total, color='purple', lw=2)
     plt.title('Concentration AGV')
@@ -763,7 +763,7 @@ try:
     plt.ylabel('kg COD / m3')
     plt.grid(True, alpha=0.3)
 
-    # --- Graphique 6 : Ammoniac (Remis en place) ---
+    # --- Graphique 6 : Ammoniac ---
     plt.subplot(3, 2, 6)
     plt.plot(time, nh3_data, color='brown', lw=2)
     plt.title('Concentration en Ammoniac ($S_{nh3}$)')
