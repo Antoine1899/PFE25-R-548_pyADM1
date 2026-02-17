@@ -33,7 +33,7 @@ for i, (nom, fichier) in enumerate(scenarios.items()):
         else:
             time = np.arange(len(df)) * (1/96)
             
-        mask = time <= 3
+        mask = time <= 10
         time_slice = time[mask]
         
         if len(time_slice) == 0: continue
@@ -67,7 +67,7 @@ for i, (nom, fichier) in enumerate(scenarios.items()):
 plt.xlabel('Temps (Jours)', fontsize=14, fontweight='bold')
 plt.ylabel('Production cumulée de méthane (m³/kg VS)', fontsize=14, fontweight='bold')
 plt.grid(True, linestyle='--', alpha=0.5)
-plt.xlim(0, 3)
+plt.xlim(0, 10)
 
 # Légende
 plt.legend(fontsize=12, loc='upper left', framealpha=0.9, fancybox=True, shadow=True)
