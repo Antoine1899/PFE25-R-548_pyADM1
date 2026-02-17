@@ -131,14 +131,14 @@ K_H_ch4 =  0.0014 * np.exp((-14240 / (100 * R)) * (1 / T_base - 1 / T_ad)) #Mliq
 K_H_h2 =  7.8 * 10 ** -4 * np.exp(-4180 / (100 * R) * (1 / T_base - 1 / T_ad)) #Mliq.bar^-1 #7.38*10^-4
 
 # Physical parameter values used in BSM2 from the Rosen et al (2006) BSM2 report
-V_liq =  14.42 #m^3
-V_gas =  1.442 #m^3
+V_liq =  12.32 #m^3
+V_gas =  1.232 #m^3
 V_ad = V_liq + V_gas #m^-3
 
 # -------------------------------------------------------------
 # MODIFICATION 1 : CHANGE LE NOM DU FICHIER ENTREE ICI 
 # -------------------------------------------------------------
-influent_state = pd.read_csv("digester_influent_témoin.csv", sep=';')
+influent_state = pd.read_csv("digester_influent_test5.csv", sep=';')
 initial_state = pd.read_csv("digester_initial.csv", sep=';')
 
 # Function to set influent values for influent state variables at each simulation step
@@ -670,11 +670,11 @@ else:
 
 # 2. On calcule le volume cumulé : Somme(Débit * dt)
 # Cela crée une colonne 'V_ch4_cumul' qui contient le vrai volume en m3
-simulate_results['V_ch4_cumul'] = ((simulate_results['q_ch4'] * dt)/93.5).cumsum()
+simulate_results['V_ch4_cumul'] = ((simulate_results['q_ch4'] * dt)/78.85).cumsum()
 # -------------------------------------
 
 # Sauvegarde du fichier CSV complet
-simulate_results.to_csv("dynamic_out_témoin.csv", index = False, sep=';')
+simulate_results.to_csv("dynamic_out_test5.csv", index = False, sep=';')
 print("Fichier généré avec la colonne V_ch4_cumul.")
 
 
@@ -688,7 +688,7 @@ try:
     time = full_time[mask_50]
 
     # 2. Récupération des données DEPUIS LE CSV (Lecture propre)
-    pyOut = pd.read_csv("dynamic_out_témoin.csv", sep=';')
+    pyOut = pd.read_csv("dynamic_out_test5.csv", sep=';')
     
     # On lit simplement les colonnes qu'on vient de calculer
     q_ch4_instant = pyOut['q_ch4'].values[mask_50]
