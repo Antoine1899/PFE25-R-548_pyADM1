@@ -30,5 +30,5 @@ Origine du travail sr lequel nous nous sommes appuyé pour l'adapter à notre pr
 	journal = {bioRxiv}
 }
 
-Auteurs du travail : Antoine TRAN, Valentin PASQUINI, Eva GOUJON, Yann JEZEQUIEL, Mor NDIAYE, Brian YOUMBI DIESSE.
+Auteurs du travail : Antoine TRAN, Valentin PASQUINI, Eva GOUJON, Yann JEZEQUEL, Mor NDIAYE, Brian YOUMBI DIESSE.
 Année : 2026
